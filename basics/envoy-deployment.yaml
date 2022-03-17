@@ -1,17 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: envoy-conf
-data:
-  envoy.yaml: |
-    admin:
-      access_log_path: /tmp/admin_access.log
-      address:
-        socket_address:
-          protocol: TCP
-          address: 127.0.0.1
-          port_value: 9901
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,7 +18,7 @@ spec:
         ports:
         - containerPort: 9901
           name: config
-        - containerPort: 10000
+        - containerPort: 8080
           name: test
 
         volumeMounts:
@@ -48,17 +34,3 @@ spec:
               path: envoy.yaml
       - name: log
         emptyDir: {}
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: envoy
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 9901
-    targetPort: 9901
-    name: admin
-  selector:
-    app: envoy
