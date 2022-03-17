@@ -11,3 +11,16 @@ data:
           protocol: TCP
           address: 127.0.0.1
           port_value: 9901
+    static_resources:
+      listeners:
+      - name: listener_8080
+        address:
+          socket_address: { address: 127.0.0.1, port_value: 8080 }
+        filter_chains:
+        - filters:
+          - name: envoy.filters.network.direct_response
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.direct_response.v3.Config
+              response: 
+                inline_string: hello world
+              
