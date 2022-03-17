@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-conf
+data:
+  envoy.yaml: |
+    admin:
+      access_log_path: /tmp/admin_access.log
+      address:
+        socket_address:
+          protocol: TCP
+          address: 127.0.0.1
+          port_value: 9901
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy
+spec:
+  selector:
+    matchLabels:
+      app: envoy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: envoy
+    spec:
+      containers:
+      - name: envoy
+        image: envoyproxy/envoy:v1.20-latest
+        ports:
+        - containerPort: 9901
+          name: config
+        - containerPort: 10000
+          name: test
+
+        volumeMounts:
+        - mountPath: /etc/envoy # mount envoy-conf volume to /etc/envoy
+          readOnly: true
+          name: envoy-conf
+      volumes:
+      - name: envoy-conf
+        configMap:
+          name: envoy-conf # place ConfigMap `envoy-conf` on /etc/envoy
+          items:
+            - key: envoy.yaml
+              path: envoy.yaml
+      - name: log
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 9901
+    targetPort: 9901
+    name: admin
+  selector:
+    app: envoy
